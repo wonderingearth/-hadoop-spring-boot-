@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>电影信息</title>
+    <style type = "text/css">
+        table{
+            border-collapse: collapse;
+            border-right: 1px solid #ccc;
+            border-bottom: 1px solid rgba(109, 30, 30, 0.32);
+            text-align:center;
+        }
+        table td{
+            width: 80px;
+            height: 30px;
+            border: 0px solid;
+        }
+    </style>
+    <script src="http://libs.baidu.com/jquery/1.9.0/jquery.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js'></script>
+    <!-- <script src="../../echarts/dist/echarts.js"></script> -->
+    <script src='js/echarts-wordcloud.js'></script>
+    <script type="text/javascript">
+        function getParam(paramName) {
+            idx = this.location.href.indexOf('=');
+            console.log(idx);
+            return this.location.href.substr(idx + 1);
+        }
+    </script>
+</head>
+<body>
+<div align="center" style="position:relative;top:10px">电影信息</div>
+<div align="center" style="position:relative;top:50px">
+    <table border="0"
+           id="table1">
+        <tr>
+            <td>电影</td>
+            <td>类型</td>
+            <td>评分</td>
+        </tr>
+    </table>
+</div>
+<script type="text/javascript">
+
+    // $(function () {
+
+        function ones() {
+            var some = getParam("search");
+            console.log(some)
+            some = decodeURI(some);
+            alert(some);
+            // 请求获取数据
+            $.ajax({
+                url: "/searchdata?search="+some,
+                type: "get",
+                dataType: "json",
+                success: function (result) { //成功操作
+                    var res = result.list2;
+                    console.log(res);
+                    var tab = $("#table1")[0];
+                    tab = tab.childNodes[1]; //tbody标签
+                    //   console.log(tab)
+                    for (var i = 0; i < res.length; i++) {
+                        //循环添加
+                        // if (i < res.length - 1) { //前面接收数据
+                        var tr = $("<tr>"); //创建tr标签
+                        var td1 = $("<td>"); //创建td标签
+                        td1.text(res[i].movie);
+                        var td4 = $("<td>"); //创建td标签
+                        td4.text(res[i].type);
+                        var td5 = $("<td>");
+                        td5.text(res[i].value);
+                        tr.append(td1);
+                        tr.append(td4);
+                        tr.append(td5);
+                        tab.append(tr[0]);
+                    }
+                },
+                error: function () {
+                    console.log("请求失败！！")
+                }
+
+            });
+
+        }
+        ones();
+
+    // })
+</script>
+</body>
+<body>
+<div id="main-3" align="center" style="width: 1400px;height: 400px;top:80px"></div>
+<style>
+    html, body, #main {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+    }
+</style>
+<script type="text/javascript">
+    function loadOneColumn() {
+        var chart = echarts.init(document.getElementById('main-3'));
+        chart.setOption ( {
+            tooltip: {},
+            series: [{
+                type: 'wordCloud',
+                gridSize: 2,
+                sizeRange: [12, 50],
+                rotationRange: [-90, 90],
+                shape: 'pentagon',
+                width: 600,
+                height: 400,
+                drawOutOfBound: true,
+                textStyle: {
+                    color: function () {
+                        return 'rgb(' + [
+                            Math.round(Math.random() * 160),
+                            Math.round(Math.random() * 160),
+                            Math.round(Math.random() * 160)
+                        ].join(',') + ')';
+                    }
+                },
+                emphasis: {
+                    textStyle: {
+                        shadowBlur: 10,
+                        shadowColor: '#333'
+                    }
+                },
+                data: []
+            }]
+        });
+        chart.showLoading();
+        var wordData=[]
+        $.ajax({
+            type: 'get',
+            url: "/searchdata?search="+getParam("search"),//请求数据的地址
+            dataType: "json",        //返回数据形式为json
+            success: function (result) {
+                 var res = result.list1;
+                console.log(res);
+                //请求成功时执行该函数内容，result即为服务器返回的json对象
+                $.each(res, function (index, item) {
+                    //挨个取出类别并填入类别数组
+                    wordData.push({name:item.name,value:item.value})
+                });
+                chart.hideLoading();
+                chart.setOption({        //加载数据图表
+                    series: [{
+                        data: wordData
+                    }]
+                });
+            },
+            error: function(errorMsg) {
+                //请求失败时执行该函数
+                alert("图表请求数据失败!");
+            }
+        });
+
+    }
+    loadOneColumn()
+</script>
+</body>
+</html>
